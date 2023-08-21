@@ -1,0 +1,19 @@
+{
+    "name": "hrvoje/php_framework",
+    "description": "Zadatak za praksu",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Hrvoje\\PhpFramework\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Hrvoje Lesar",
+            "email": "hrvoje.lesar1@hotmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    }
+}
