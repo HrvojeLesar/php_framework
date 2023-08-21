@@ -3,6 +3,7 @@
 namespace Hrvoje\PhpFramework\Router;
 
 use Closure;
+use Hrvoje\PhpFramework\Response\ResponseInterface;
 
 class Route
 {
@@ -11,7 +12,7 @@ class Route
     public \Closure $callback;
 
     /**
-     * @param Closure(): void $callback
+     * @param Closure(): ResponseInterface $callback
      */
     public function __construct(string $url, Method $method, \Closure $callback)
     {
@@ -20,7 +21,7 @@ class Route
         $this->callback = $callback;
     }
 
-    public function resolve(): mixed
+    public function resolve(): ResponseInterface
     {
         return call_user_func($this->callback);
     }

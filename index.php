@@ -11,4 +11,4 @@ $ROUTER = new Router();
 include "routes.php";
 
 $request = new Request();
-$ROUTER->resolve($request);
+echo $ROUTER->resolve($request)->send();

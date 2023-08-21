@@ -3,6 +3,9 @@
 namespace Hrvoje\PhpFramework\Router;
 
 use Hrvoje\PhpFramework\Request\RequestInterface;
+use Hrvoje\PhpFramework\Response\Response;
+use Hrvoje\PhpFramework\Response\ResponseInterface;
+use Hrvoje\PhpFramework\Response\ResponseType;
 
 class Router
 {
@@ -13,7 +16,7 @@ class Router
     {
         $this->routes = [];
         $this->default_route = new Route("/not-found", Method::Get, function () {
-            echo "<h1>Not Found</h1>";
+            return new Response("<h1>Not Found</h1>", ResponseType::Plaintext);
         });
     }
 
@@ -23,7 +26,7 @@ class Router
         return $this;
     }
 
-    public function resolve(RequestInterface $request): mixed
+    public function resolve(RequestInterface $request): ResponseInterface
     {
         return $this->tryFindRoute($request)->resolve();
     }

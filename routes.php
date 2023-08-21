@@ -1,16 +1,18 @@
 <?php
 
+use Hrvoje\PhpFramework\Response\Response;
+use Hrvoje\PhpFramework\Response\ResponseType;
 use Hrvoje\PhpFramework\Router\Method;
 use Hrvoje\PhpFramework\Router\Route;
 
 $ROUTER->addRoute(new Route("/", Method::Get, function () {
-    echo "<h1>Hello World!</h1>";
+    return new Response("<h1>Hello World!</h1>", ResponseType::Plaintext);
 }));
 
 $ROUTER->addRoute(new Route("/", Method::Post, function () {
-    echo "Hello World! Post!";
+    return new Response(["some" => "json", "response" => "data"], ResponseType::Json);
 }));
 
 $ROUTER->addRoute(new Route("/route1", Method::Get, function () {
-    echo "<h1>Hello World again!</h1>";
+    return new Response("Hello World again!", ResponseType::Plaintext);
 }));
