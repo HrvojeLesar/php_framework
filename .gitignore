@@ -1,2 +1,4 @@
 /vendor
 .env
+psalm.xml
+.php-cs-fixer.cache

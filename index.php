@@ -1,12 +1,14 @@
 <?php
 
+use Hrvoje\PhpFramework\Request\Request;
 use Hrvoje\PhpFramework\Router\Router;
 
 require __DIR__.'/vendor/autoload.php';
 
-global $ROUTER; 
+global $ROUTER;
 $ROUTER = new Router();
 
 include "routes.php";
 
-$ROUTER->resolve();
+$request = new Request();
+$ROUTER->resolve($request);

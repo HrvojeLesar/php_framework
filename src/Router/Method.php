@@ -14,4 +14,13 @@ enum Method
             Method::Post => "POST"
         };
     }
+
+    public static function fromString(string $method): Method
+    {
+        return match ($method) {
+            "GET" => Method::Get,
+            "POST" => Method::Post,
+            default => Method::Get,
+        };
+    }
 }

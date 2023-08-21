@@ -2,12 +2,17 @@
 
 namespace Hrvoje\PhpFramework\Router;
 
+use Closure;
+
 class Route
 {
     private string $url;
     private Method $method;
     public \Closure $callback;
 
+    /**
+     * @param Closure(): void $callback
+     */
     public function __construct(string $url, Method $method, \Closure $callback)
     {
         $this->url = $url;
@@ -15,12 +20,12 @@ class Route
         $this->callback = $callback;
     }
 
-    public function resolve()
+    public function resolve(): mixed
     {
         return call_user_func($this->callback);
     }
 
-    public function match(string $url, string $method): bool
+    public function match(string $url, Method $method): bool
     {
         return $this->urlMatches($url) && $this->methodMatches($method);
     }
@@ -30,8 +35,8 @@ class Route
         return $this->url == $url;
     }
 
-    private function methodMatches(string $method): bool
+    private function methodMatches(Method $method): bool
     {
-        return $this->method->getMethodName() == $method;
+        return $this->method === $method;
     }
 }

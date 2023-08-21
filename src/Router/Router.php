@@ -2,6 +2,8 @@
 
 namespace Hrvoje\PhpFramework\Router;
 
+use Hrvoje\PhpFramework\Request\RequestInterface;
+
 class Router
 {
     private array $routes;
@@ -15,28 +17,22 @@ class Router
         });
     }
 
-    public function addRoute(Route $route)
+    public function addRoute(Route $route): Router
     {
         $this->routes[] = $route;
         return $this;
     }
 
-    public function resolve()
+    public function resolve(RequestInterface $request): mixed
     {
-        return $this->tryFindRoute()->resolve();
+        return $this->tryFindRoute($request)->resolve();
     }
 
-    private function tryFindRoute(): Route
+    private function tryFindRoute(RequestInterface $request): Route
     {
-        $path = $_SERVER["PATH_INFO"];
-        $method = $_SERVER["REQUEST_METHOD"];
-
-        if (is_null($path)) {
-            $path = "/";
-        }
-
+        /** @var Route $route */
         foreach ($this->routes as &$route) {
-            if ($route->match($path, $method)) {
+            if ($route->match($request->getRequestUrl(), $request->getRequestMethod())) {
                 return $route;
             }
         }
