@@ -35,7 +35,7 @@ class Router
     {
         /** @var Route $route */
         foreach ($this->routes as &$route) {
-            if ($route->match($request->getRequestUrl(), $request->getRequestMethod())) {
+            if ($route->match($request)) {
                 return $route;
             }
         }
