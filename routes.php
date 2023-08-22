@@ -1,17 +1,17 @@
 <?php
 
+use Hrvoje\PhpFramework\Controller\IndexController;
 use Hrvoje\PhpFramework\Response\Response;
-use Hrvoje\PhpFramework\Response\ResponseType;
 use Hrvoje\PhpFramework\Router\Route;
 
-Route::get("/", function () {
-    return new Response("<h1>Hello World!</h1>", ResponseType::Plaintext);
-});
+Route::get("/", [IndexController::class, "indexAction"]);
 
-Route::post("/", function () {
-    return new Response(["some" => "json", "response" => "data"], ResponseType::Json);
-});
+Route::post("/", [IndexController::class, "indexJsonAction"]);
 
 Route::get("/route1", function () {
-    return new Response("Hello World again!", ResponseType::Plaintext);
+    return new Response("Hello World again!");
+});
+
+Route::get("/route/{with}/{params}", function (int $with, string $params) {
+    return new Response($with . $params);
 });
