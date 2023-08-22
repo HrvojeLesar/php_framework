@@ -10,12 +10,12 @@ use Hrvoje\PhpFramework\Response\ResponseType;
 class Router
 {
     private array $routes;
-    private Route $default_route;
+    private Route $defaultRoute;
 
-    public function __construct()
+    public function __construct(Route $defaultRoute = null)
     {
         $this->routes = [];
-        $this->default_route = new Route("/not-found", Method::Get, function () {
+        $this->defaultRoute = $defaultRoute ?? new Route("/not-found", Method::Get, function () {
             return new Response("<h1>Not Found</h1>", ResponseType::Plaintext);
         });
     }
@@ -40,6 +40,6 @@ class Router
             }
         }
 
-        return $this->default_route;
+        return $this->defaultRoute;
     }
 }

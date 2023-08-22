@@ -40,4 +40,20 @@ class Route
     {
         return $this->method === $method;
     }
+
+    /**
+     * @param Closure(): ResponseInterface $callback
+     */
+    public static function get(string $url, \Closure $callback): void
+    {
+        RouterSingleton::router()->addRoute(new Route($url, Method::Get, $callback));
+    }
+
+    /**
+     * @param Closure(): ResponseInterface $callback
+     */
+    public static function post(string $url, \Closure $callback): void
+    {
+        RouterSingleton::router()->addRoute(new Route($url, Method::Post, $callback));
+    }
 }
