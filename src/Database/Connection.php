@@ -25,7 +25,7 @@ class Connection
         return static::$connection;
     }
 
-    protected function getDatabaseConnection(): PDO
+    public function getDatabaseConnection(): PDO
     {
         if (is_null(static::$databaseConnection)) {
             static::$databaseConnection = static::newConnection();
@@ -178,5 +178,31 @@ class Connection
                 }
             }
         }
+    }
+
+    /**
+     * @return void
+     * @param array $data
+     * @param array $conditions
+     */
+    public function update(string $table, array $data, array $conditions): void
+    {
+        $set = implode(", ", array_map(function ($key) {
+            return sprintf("%s=?", $key);
+        }, array_keys($data)));
+
+        $params = array_values($data);
+        // TODO: Support OR...
+        $where = implode(" AND ", array_map(function ($condition) use (&$params) {
+            if (is_array($condition) && count($condition) === 3) {
+                $params[] = $condition[2];
+                return sprintf("%s%s?", $condition[0], $condition[1]);
+            }
+            return "";
+        }, $conditions));
+
+        $query = sprintf("UPDATE %s SET %s WHERE %s", $table, $set, $where);
+        $this->statement = $this->getDatabaseConnection()->prepare($query);
+        $this->statement->execute($params);
     }
 }
