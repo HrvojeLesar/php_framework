@@ -8,6 +8,7 @@ use Hrvoje\PhpFramework\Response\ResponseInterface;
 
 class Router
 {
+    /** @var Route[] $routes */
     private array $routes;
     private Route $defaultRoute;
 
@@ -32,7 +33,6 @@ class Router
 
     private function tryFindRoute(RequestInterface $request): Route
     {
-        /** @var Route $route */
         foreach ($this->routes as &$route) {
             if ($route->match($request)) {
                 return $route;
