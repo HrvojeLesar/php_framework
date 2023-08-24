@@ -2,7 +2,9 @@
 
 namespace Hrvoje\PhpFramework\Database;
 
+use InvalidArgumentException;
 use PDO;
+use PDOException;
 use PDOStatement;
 
 class Connection
@@ -34,23 +36,28 @@ class Connection
         return static::$databaseConnection;
     }
 
+    /**
+     * @throws PDOException
+     */
     protected static function newConnection(): PDO
     {
         $dbname = getenv("PHPFRAMEWORK_DBNAME") ?: "testdb";
         $user = getenv("PHPFRAMEWORK_DBUSER") ?: "testuser";
         $pass = getenv("PHPFRAMEWORK_DBPASS") ?: "testpass";
 
-        // TODO: Handle expcetion...
         return new PDO("mysql:host=localhost;dbname=".$dbname, $user, $pass);
     }
 
     /**
-     * @param array $params
+     * @param array|null $params
+     * @throws PDOException
      */
-    public function select(string $query, array $params): Connection
+    public function select(string $query, array|null $params = null): Connection
     {
         $this->statement = $this->getDatabaseConnection()->prepare($query);
-        $this->bindSelectParams($params);
+        if (isset($params) && count($params) > 0) {
+            $this->bindSelectParams($params);
+        }
         $this->statement->execute();
 
         return $this;
@@ -62,12 +69,9 @@ class Connection
     protected function bindSelectParams(array $params): void
     {
         if ($this->statement instanceof PDOStatement) {
-            $is_indexed_array = array_is_list($params);
+            $isIndexedArray = array_is_list($params);
             foreach($params as $paramKey => $paramValue) {
-                if ($is_indexed_array) {
-                    $paramKey = (int)$paramKey + 1;
-                }
-                $this->statement->bindValue($paramKey, $paramValue);
+                $this->statement->bindValue($isIndexedArray ? (int)$paramKey + 1 : $paramKey, $paramValue);
             }
         }
     }
@@ -93,27 +97,29 @@ class Connection
     /**
      * @return void
      * @param array $data
+     * @throws InvalidArgumentException
+     * @throws PDOException
      */
     public function insert(string $table, array $data): void
     {
         $paramNames = $this->extractParameterKeyNames($data);
-        $elementCount = $this->countNumberOfElementsToInsert($data);
+        $itemCount = $this->countItems($data);
 
-        if (count($paramNames) === 0 || $elementCount === 0) {
-            return;
+        if (count($paramNames) === 0 || $itemCount === 0) {
+            throw new InvalidArgumentException("Data must contain at least one item");
         }
 
-        $query = $this->constructInsertQuery($table, $data, $paramNames, $elementCount);
+        $query = $this->constructInsertQuery($table, $data, $paramNames, $itemCount);
         $this->statement = $this->getDatabaseConnection()->prepare($query);
 
-        $this->bindInsertParams($paramNames, $data, $elementCount);
+        $this->bindInsertParams($paramNames, $data, $itemCount);
         $this->statement->execute();
     }
 
     /**
      * @param array $data
      */
-    protected function isSingleElementInsertion(array $data): bool
+    protected function isSingleItemInsertion(array $data): bool
     {
         if (array_is_list($data) && count($data) > 0) {
             return false;
@@ -126,7 +132,7 @@ class Connection
      */
     protected function extractParameterKeyNames(array $data): array
     {
-        if ($this->isSingleElementInsertion($data)) {
+        if ($this->isSingleItemInsertion($data)) {
             return array_keys($data);
         } else {
             return array_keys(isset($data[0]) ? $data[0] : []);
@@ -136,16 +142,16 @@ class Connection
      * @param array $data
      * @param array $paramNames
      */
-    protected function constructInsertQuery(string $table, array $data, array $paramNames, int $elementCount): string
+    protected function constructInsertQuery(string $table, array $data, array $paramNames, int $itemCount): string
     {
         $innerParamValues = implode(",", array_fill(0, count($paramNames), "?"));
-        $paramValues = implode(",", array_fill(0, $elementCount, sprintf("(%s)", $innerParamValues)));
+        $paramValues = implode(",", array_fill(0, $itemCount, sprintf("(%s)", $innerParamValues)));
         return sprintf("INSERT INTO %s(%s) VALUES %s", $table, implode(",", $paramNames), $paramValues);
     }
     /**
      * @param array $data
      */
-    protected function countNumberOfElementsToInsert(array $data): int
+    protected function countItems(array $data): int
     {
         $count = count($data);
         if (array_is_list($data)) {
@@ -161,19 +167,19 @@ class Connection
      * @param array $paramNames
      * @param array $data
      */
-    protected function bindInsertParams(array $paramNames, array $data, int $elementCount): void
+    protected function bindInsertParams(array $paramNames, array $data, int $itemCount): void
     {
         if ($this->statement instanceof PDOStatement) {
-            $isSingleElement = $this->isSingleElementInsertion($data);
+            $isSingleItem = $this->isSingleItemInsertion($data);
             $paramIndex = 1;
-            if ($isSingleElement) {
+            if ($isSingleItem) {
                 foreach($paramNames as &$param) {
                     $this->statement->bindValue($paramIndex++, $data[$param]);
                 }
             } else {
-                foreach($data as &$element) {
+                foreach($data as &$item) {
                     foreach($paramNames as &$param) {
-                        $this->statement->bindValue($paramIndex++, $element[$param]);
+                        $this->statement->bindValue($paramIndex++, $item[$param]);
                     }
                 }
             }
@@ -183,25 +189,31 @@ class Connection
     /**
      * @return void
      * @param array $data
-     * @param array $conditions
+     * @param array|null $conditions
+     * @throws PDOException
      */
-    public function update(string $table, array $data, array $conditions): void
+    public function update(string $table, array $data, array|null $conditions): void
     {
         $set = implode(", ", array_map(function ($key) {
             return sprintf("%s=?", $key);
         }, array_keys($data)));
 
         $params = array_values($data);
-        // TODO: Support OR...
-        $where = implode(" AND ", array_map(function ($condition) use (&$params) {
-            if (is_array($condition) && count($condition) === 3) {
-                $params[] = $condition[2];
-                return sprintf("%s%s?", $condition[0], $condition[1]);
-            }
-            return "";
-        }, $conditions));
 
-        $query = sprintf("UPDATE %s SET %s WHERE %s", $table, $set, $where);
+        if (isset($conditions)) {
+            // TODO: Support OR...
+            $where = implode(" AND ", array_map(function ($condition) use (&$params) {
+                if (is_array($condition) && count($condition) === 3) {
+                    $params[] = $condition[2];
+                    return sprintf("%s%s?", $condition[0], $condition[1]);
+                }
+                return "";
+            }, $conditions));
+            $query = sprintf("UPDATE %s SET %s WHERE %s", $table, $set, $where);
+        } else {
+            $query = sprintf("UPDATE %s SET %s", $table, $set);
+        }
+
         $this->statement = $this->getDatabaseConnection()->prepare($query);
         $this->statement->execute($params);
     }
