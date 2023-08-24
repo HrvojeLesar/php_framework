@@ -79,7 +79,7 @@ class Connection
     public function fetchAssoc(): mixed
     {
         if ($this->statement instanceof PDOStatement) {
-            return $this->statement->fetch();
+            return $this->statement->fetch(PDO::FETCH_ASSOC);
         } else {
             return null;
         }
@@ -88,7 +88,7 @@ class Connection
     public function fetchAssocAll(): mixed
     {
         if ($this->statement instanceof PDOStatement) {
-            return $this->statement->fetchAll();
+            return $this->statement->fetchAll(PDO::FETCH_ASSOC);
         } else {
             return null;
         }
