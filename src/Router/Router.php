@@ -2,43 +2,37 @@
 
 namespace Hrvoje\PhpFramework\Router;
 
+use Hrvoje\PhpFramework\Exceptions\RouteNotFoundException;
 use Hrvoje\PhpFramework\Request\RequestInterface;
-use Hrvoje\PhpFramework\Response\Response;
 use Hrvoje\PhpFramework\Response\ResponseInterface;
 
 class Router
 {
     /** @var Route[] $routes */
-    private array $routes;
-    private Route $defaultRoute;
+    private static array $routes = [];
 
-    public function __construct(Route $defaultRoute = null)
+    public static function addRoute(Route $route): void
     {
-        $this->routes = [];
-        $this->defaultRoute = $defaultRoute ?? new Route("/not-found", Method::Get, function () {
-            return new Response("<h1>Not Found</h1>");
-        });
+        static::$routes[] = $route;
     }
 
-    public function addRoute(Route $route): Router
+    public static function resolve(RequestInterface $request): ResponseInterface
     {
-        $this->routes[] = $route;
-        return $this;
+        return static::tryFindRoute($request)->resolve();
     }
 
-    public function resolve(RequestInterface $request): ResponseInterface
+    /**
+     * @throws RouteNotFoundException
+     */
+    private static function tryFindRoute(RequestInterface $request): Route
     {
-        return $this->tryFindRoute($request)->resolve();
-    }
-
-    private function tryFindRoute(RequestInterface $request): Route
-    {
-        foreach ($this->routes as &$route) {
+        /** @var Route $route */
+        foreach (static::$routes as &$route) {
             if ($route->match($request)) {
                 return $route;
             }
         }
 
-        return $this->defaultRoute;
+        throw new RouteNotFoundException("No route was found for requested url");
     }
 }

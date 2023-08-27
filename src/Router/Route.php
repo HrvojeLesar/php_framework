@@ -105,7 +105,7 @@ class Route
      */
     public static function get(string $url, callable $callback): void
     {
-        RouterSingleton::router()->addRoute(new Route($url, Method::Get, $callback));
+        Router::addRoute(new Route($url, Method::Get, $callback));
     }
 
     /**
@@ -113,6 +113,6 @@ class Route
      */
     public static function post(string $url, callable $callback): void
     {
-        RouterSingleton::router()->addRoute(new Route($url, Method::Post, $callback));
+        Router::addRoute(new Route($url, Method::Post, $callback));
     }
 }

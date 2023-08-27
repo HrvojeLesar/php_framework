@@ -2,7 +2,7 @@
 
 namespace Hrvoje\PhpFramework\Response;
 
-class BaseResponse
+abstract class BaseResponse
 {
     protected mixed $data;
 

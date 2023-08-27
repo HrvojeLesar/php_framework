@@ -2,6 +2,7 @@
 
 namespace Hrvoje\PhpFramework\Database;
 
+use Hrvoje\PhpFramework\Exceptions\EnvNotSetException;
 use InvalidArgumentException;
 use PDO;
 use PDOException;
@@ -41,9 +42,9 @@ class Connection
      */
     protected static function newConnection(): PDO
     {
-        $dbname = getenv("PHPFRAMEWORK_DBNAME") ?: "testdb";
-        $user = getenv("PHPFRAMEWORK_DBUSER") ?: "testuser";
-        $pass = getenv("PHPFRAMEWORK_DBPASS") ?: "testpass";
+        $dbname = getenv("PHPFRAMEWORK_DBNAME") ?? throw new EnvNotSetException("PHPFRAMEWORK_DBNAME env variable must be set!");
+        $user = getenv("PHPFRAMEWORK_DBUSER") ?? throw new EnvNotSetException("PHPFRAMEWORK_DBUSER env variable must be set!");
+        $pass = getenv("PHPFRAMEWORK_DBPASS") ?? throw new EnvNotSetException("PHPFRAMEWORK_DBPASS env variable must be set!");
 
         return new PDO("mysql:host=localhost;dbname=".$dbname, $user, $pass);
     }
@@ -52,10 +53,10 @@ class Connection
      * @param array|null $params
      * @throws PDOException
      */
-    public function select(string $query, array|null $params = null): Connection
+    public function select(string $query, array $params = []): Connection
     {
         $this->statement = $this->getDatabaseConnection()->prepare($query);
-        if (isset($params) && count($params) > 0) {
+        if (count($params) > 0) {
             $this->bindSelectParams($params);
         }
         $this->statement->execute();
@@ -201,7 +202,6 @@ class Connection
         $params = array_values($data);
 
         if (isset($conditions)) {
-            // TODO: Support OR...
             $where = implode(" AND ", array_map(function ($condition) use (&$params) {
                 if (is_array($condition) && count($condition) === 3) {
                     $params[] = $condition[2];
@@ -212,6 +212,32 @@ class Connection
             $query = sprintf("UPDATE %s SET %s WHERE %s", $table, $set, $where);
         } else {
             $query = sprintf("UPDATE %s SET %s", $table, $set);
+        }
+
+        $this->statement = $this->getDatabaseConnection()->prepare($query);
+        $this->statement->execute($params);
+    }
+
+    /**
+     * @return void
+     * @param array $data
+     * @param array|null $conditions
+     * @throws PDOException
+     */
+    public function delete(string $table, array|null $conditions): void
+    {
+        $params = [];
+        if (isset($conditions)) {
+            $where = implode(" AND ", array_map(function ($condition) use (&$params) {
+                if (is_array($condition) && count($condition) === 3) {
+                    $params[] = $condition[2];
+                    return sprintf("%s%s?", $condition[0], $condition[1]);
+                }
+                return "";
+            }, $conditions));
+            $query = sprintf("DELETE FROM %s WHERE %s", $table, $where);
+        } else {
+            $query = sprintf("DELETE FROM %s", $table);
         }
 
         $this->statement = $this->getDatabaseConnection()->prepare($query);
