@@ -50,7 +50,7 @@ class Connection
     }
 
     /**
-     * @param array|null $params
+     * @param array $params
      * @throws PDOException
      */
     public function select(string $query, array $params = []): Connection

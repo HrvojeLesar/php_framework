@@ -10,15 +10,15 @@ class Route
     private string $url;
     private Method $method;
     /**
-     * @var callable
+     * @var callable|array
      */
     private $callback;
     private array $parameters;
 
     /**
-     * @param callable(): mixed $callback
+     * @param callable|array $callback
      */
-    public function __construct(string $url, Method $method, callable $callback)
+    public function __construct(string $url, Method $method, $callback)
     {
         $this->url = $url;
         $this->method = $method;
@@ -26,8 +26,13 @@ class Route
         $this->parameters = $this->parseParams($url);
     }
 
-    public function resolve(): ResponseInterface
+    public function resolve(RequestInterface $request): ResponseInterface
     {
+        if (is_array($this->callback) && isset($this->callback[0], $this->callback[1]) === true) {
+            if (class_exists($this->callback[0])) {
+                $this->callback[0] = new $this->callback[0]($request);
+            }
+        }
         return call_user_func_array($this->callback, $this->parameters);
     }
 
@@ -101,17 +106,17 @@ class Route
     }
 
     /**
-     * @param callable $callback
+     * @param callable|array $callback
      */
-    public static function get(string $url, callable $callback): void
+    public static function get(string $url, $callback): void
     {
         Router::addRoute(new Route($url, Method::Get, $callback));
     }
 
     /**
-     * @param callable $callback
+     * @param callable|array $callback
      */
-    public static function post(string $url, callable $callback): void
+    public static function post(string $url, $callback): void
     {
         Router::addRoute(new Route($url, Method::Post, $callback));
     }

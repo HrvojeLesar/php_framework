@@ -1,0 +1,27 @@
+<html>
+
+<head>
+    <title>Users</title>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <th>Id</th>
+            <th>First name</th>
+            <th>Last name</th>
+            <th>Date of birth</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.first_name }}</td>
+            <td>{{ user.last_name }}</td>
+            <td>{{ user.dob }}</td>
+            <td><a href="/user/updateUser/{{ user.id }}">Update</a></td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+
+</html>

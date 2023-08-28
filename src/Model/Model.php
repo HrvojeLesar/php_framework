@@ -12,7 +12,7 @@ abstract class Model
 
     abstract protected static function getTableName(): string;
 
-    private array $columns = [];
+    protected array $columns = [];
 
     abstract public function __construct();
 

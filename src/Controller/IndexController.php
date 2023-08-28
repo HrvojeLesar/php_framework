@@ -9,7 +9,7 @@ use Twig\Loader\FilesystemLoader;
 
 class IndexController
 {
-    public static function indexAction(): Response
+    public function indexAction(): Response
     {
         $loader = new FilesystemLoader(getcwd()."/templates");
         $twig = new Environment($loader);
@@ -17,7 +17,7 @@ class IndexController
         return new Response($twig->render("index.html", ["name" => "Template"]));
     }
 
-    public static function indexJsonAction(): JsonResponse
+    public function indexJsonAction(): JsonResponse
     {
         return new JsonResponse(["some" => "json", "response" => "data"]);
     }

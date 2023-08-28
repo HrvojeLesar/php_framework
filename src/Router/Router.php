@@ -16,9 +16,12 @@ class Router
         static::$routes[] = $route;
     }
 
+    /**
+     * @throws RouteNotFoundException
+     */
     public static function resolve(RequestInterface $request): ResponseInterface
     {
-        return static::tryFindRoute($request)->resolve();
+        return static::tryFindRoute($request)->resolve($request);
     }
 
     /**
